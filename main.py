@@ -71,10 +71,30 @@ def add_conversion():
     })
 
 
-"""
 @app.route("/convert", methods=["GET"])
 def convert():
-"""
+    from_currency = request.args.get("from_currency")
+    to_currency = request.args.get("to_currency")
+    amount = request.args.get("amount", type=float)
+    conn = psycopg2.connect(database="currency_db", user="postgres",
+                            password="admin", host="localhost", port="5432")
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT rate FROM currency WHERE from_currency = %s AND to_currency = %s",
+        (from_currency, to_currency)
+    )
+    rate_result = cur.fetchone()
+    rate = rate_result[0]
+    converted_amount = float(amount) * rate
+    cur.close()
+    conn.close()
+    return jsonify({
+        "converted_amount": converted_amount,
+        "to_currency": to_currency,
+        "from_currency": from_currency,
+        "rate": rate,
+        "amount": amount
+    })
 
 
 if __name__ == '__main__':
