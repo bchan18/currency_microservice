@@ -27,7 +27,7 @@ cur.close()
 conn.close()
 
 
-@app.route("/list")
+@app.route("/list", methods=["GET"])
 def list_conversions():
     conn = psycopg2.connect(database="currency_db", user="postgres",
                             password="admin", host="localhost", port="5432")
@@ -45,6 +45,36 @@ def list_conversions():
         for from_curr, to_curr, rate in conversions
     ]
     return jsonify(conversions_list)
+
+
+@app.route("/add", methods=["POST"])
+def add_conversion():
+    data = request.get_json()
+    from_currency = data.get("from_currency")
+    to_currency = data.get("to_currency")
+    rate = data.get("rate")
+    conn = psycopg2.connect(database="currency_db", user="postgres",
+                            password="admin", host="localhost", port="5432")
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO currency (from_currency, to_currency, rate) VALUES (%s, %s, %s)",
+        (from_currency, to_currency, rate)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({
+        "message": "Conversion added successfully.",
+        "from_currency": from_currency,
+        "to_currency": to_currency,
+        "rate": rate
+    })
+
+
+"""
+@app.route("/convert", methods=["GET"])
+def convert():
+"""
 
 
 if __name__ == '__main__':
